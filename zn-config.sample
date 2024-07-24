@@ -1,0 +1,2 @@
+# split by |
+# excluded_services="snapd|apparmor" # sample

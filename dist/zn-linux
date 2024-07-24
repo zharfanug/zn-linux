@@ -1,0 +1,6 @@
+#!/bin/bash
+export zn_ver=1.0.1
+
+echo "zn: $zn_ver"
+echo "motd: $motd_ver"
+echo "init: $init_ver"
