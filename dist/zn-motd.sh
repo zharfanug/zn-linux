@@ -1,5 +1,5 @@
 #!/bin/bash
-export motd_ver=2.0.12
+export motd_ver=2.0.13
 
 if [ -e zn-config ]; then
   source zn-config
@@ -7,10 +7,10 @@ fi
 
 if [ -f /etc/lsb-release ]; then
   osver=$(cat /etc/lsb-release | grep "DISTRIB_RELEASE" | cut -d "=" -f 2- | sed 's/"//g')
-  os_services="|apparmor|apport|apt-|blk-availability|bolt|cloud-config|cloud-final|cloud-init|console-|cron|cryptdisks|dbus|debug-shell|dm-event|dmesg|dpkg|e2scrub|emergency|esm-cache|finalrd|friendly-recovery|fstrim|fwupd|getty-|gpu-manager|grub-|hwclock|initrd-|irqbalance|iscsi|keyboard-setup|kmod|logrotate|lvm2|lxd-agent|man-db|mdcheck|mdmonitor|ModemManager|motd-news|multipath-|multipathd|netplan-ovs-cleanup|networkd-dispatcher|nftables|open-iscsi|packagekit|plymouth|polkit|pollinate|procps|quotaon|rc-local|rc.service|rcS.service|rescue.service|rsync|screen-cleanup|secureboot-db|setvtrgb|snap|snmpd|ssh|sudo|sysstat|system-update-cleanup|systemd-|thermald|ua-reboot-cmds|ua-timer|ubuntu-advantage|udev|udisks2|unattended-upgrades|update-notifier-download|update-notifier-motd|upower|usbmuxd|uuidd|vgauth|vmtoolsd|x11-common|xfs_scrub_all"
+  os_services="auditd|apparmor|apport|apt-|blk-availability|bolt|cloud-config|cloud-final|cloud-init|console-|cron|cryptdisks|dbus|debug-shell|dm-event|dmesg|dpkg|e2scrub|emergency|esm-cache|finalrd|friendly-recovery|fstrim|fwupd|getty-|gpu-manager|grub-|hwclock|initrd-|irqbalance|iscsi|keyboard-setup|kmod|logrotate|lvm2|lxd-agent|man-db|mdcheck|mdmonitor|ModemManager|motd-news|multipath-|multipathd|netplan-ovs-cleanup|networkd-dispatcher|open-iscsi|packagekit|plymouth|polkit|pollinate|procps|quotaon|rc-local|rc.service|rcS.service|rescue.service|rsync|screen-cleanup|secureboot-db|setvtrgb|snap|snmpd|ssh|sudo|system-update-cleanup|systemd-|thermald|ua-reboot-cmds|ua-timer|ubuntu-advantage|udev|udisks2|unattended-upgrades|update-notifier-download|update-notifier-motd|upower|usbmuxd|uuidd|vgauth|vmtoolsd|x11-common|xfs_scrub_all"
 elif [ -f /etc/debian_version ]; then
   osver=$(cat /etc/debian_version)
-  os_services="|apparmor|apt-|blk-availability|console-|cron|cryptdisks|dbus|debug-shell|dm-event|dpkg|e2scrub|emergency|fstrim|getty-|hwclock|ifup|initrd-|keyboard-setup|kmod|logrotate|lvm2|man-db|networking|nftables|pam_namespace|procps|quotaon|rc-local|rc.service|rcS.service|rescue.service|rsync|ssh|sudo|system-update-cleanup|systemd-|udev|vgauth|vmtoolsd|x11-common"
+  os_services="auditd|apparmor|apt-|blk-availability|console-|cron|cryptdisks|dbus|debug-shell|dm-event|dpkg|e2scrub|emergency|fstrim|getty-|hwclock|ifup|initrd-|keyboard-setup|kmod|logrotate|lvm2|man-db|networking|pam_namespace|procps|quotaon|rc-local|rc.service|rcS.service|rescue.service|rsync|ssh|sudo|system-update-cleanup|systemd-|udev|vgauth|vmtoolsd|x11-common"
 elif [ -f /etc/redhat-release ]; then
   osver=$(cat /etc/redhat-release)
 elif [ -f /etc/SuSE-release ]; then
@@ -22,8 +22,8 @@ else
 fi
 
 # config
-services_pattern="sysstat"
-services_pattern+=$os_services
+services_pattern="sysstat-"
+services_pattern+="|${os_services}"
 if [[ -n "${excluded_services}" ]]; then
   services_pattern+="|${excluded_services}"
 fi
@@ -42,7 +42,7 @@ undim="\e[0m"
 
 print_motd() {
   services=($(systemctl list-unit-files --type=service --no-pager | grep -vE "(@)" | grep -vE "^(${services_pattern})" | awk '/\.service/ {print substr($1, 1, length($1)-8)}'))
-  services+=("sysstat")
+  # services+=("sysstat")
 
   # get processors
   PROCESSOR_COUNT=`grep -ioP 'processor\t:' /proc/cpuinfo | wc -l`
