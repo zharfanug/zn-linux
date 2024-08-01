@@ -1,2 +1,3 @@
 # split by |
-# excluded_services="snapd|apparmor" # sample
+# export excluded_services="snapd|apparmor" # sample remove snapd and apparmor
+export excluded_services=""
