@@ -116,11 +116,11 @@ link_to_bin zn-motd.sh motd
 add_to_bin zn-linux
 install_script zn-init.sh
 
+if command -v nft >/dev/null 2>&1; then
+  initial_nftables
+fi
+
 if [ -e zn-config ]; then
   install_script_config zn-config
   source ./zn-config
-fi
-
-if command -v nft >/dev/null 2>&1; then
-  initial_nftables
 fi
