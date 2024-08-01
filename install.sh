@@ -89,6 +89,18 @@ cp_if_not_exists() {
   fi
 }
 
+clean_old_motd() {
+  mkdir -p ~/.backup/etc/update-motd.d/
+  if [ -e "/etc/update-motd.d/" ]; then
+    sudo mv /etc/update-motd.d/* ~/.backup/etc/update-motd.d/ >/dev/null 2>&1
+  fi
+  if [ ! -e ~/.backup/etc/motd ]; then
+    sudo mv /etc/motd ~/.backup/etc/ >/dev/null 2>&1
+    sudo touch /etc/motd
+  fi
+  sudo rm -f /usr/local/bin/znver
+}
+
 copy_nft() {
   sudo cp "./dist/zn-nft-base.nft" "/etc/nftables.conf"
   nftd_path="/etc/nftables.d"
@@ -119,6 +131,8 @@ install_script zn-init.sh
 if command -v nft >/dev/null 2>&1; then
   initial_nftables
 fi
+
+clean_old_motd
 
 if [ -e ./zn-config ]; then
   install_script_config zn-config
