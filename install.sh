@@ -78,14 +78,23 @@ add_to_bin() {
   sudo cp ./dist/$1 /usr/local/bin/$1
 }
 
+create_if_not_exist() {
+  if [ ! -e "$1" ]; then
+    touch "$1"
+  fi
+}
+
 copy_nft() {
   sudo cp "./dist/zn-nft-base.nft" "/etc/nftables.conf"
   nftd_path="/etc/nftables.d"
   mkdir -p $nftd_path
-  sudo cp "./dist/zn-nft-define.nft" "/etc/nftables.conf"
   sudo cp "./dist/zn-nft-define.nft" "${nftd_path}/"
   sudo cp "./dist/zn-nft-input.nft" "${nftd_path}/"
   sudo cp "./dist/zn-nft-sets.nft" "${nftd_path}/"
+  create_if_not_exist "${nftd_path}/custom-define.nft"
+  create_if_not_exist "${nftd_path}/custom-input.nft"
+  create_if_not_exist "${nftd_path}/custom-sets.nft"
+fi
 }
 
 initial_nftables() {
