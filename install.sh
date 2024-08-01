@@ -81,7 +81,7 @@ add_to_bin() {
 copy_nft() {
   sudo cp "./dist/zn-nft-base.nft" "/etc/nftables.conf"
   nftd_path="/etc/nftables.d"
-  mkdir -p nftd_path
+  mkdir -p $nftd_path
   sudo cp "./dist/zn-nft-define.nft" "/etc/nftables.conf"
   sudo cp "./dist/zn-nft-define.nft" "${nftd_path}/"
   sudo cp "./dist/zn-nft-input.nft" "${nftd_path}/"
