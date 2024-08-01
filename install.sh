@@ -97,7 +97,7 @@ copy_nft() {
   sudo cp "./dist/zn-nft-input.nft" "${nftd_path}/"
   sudo cp "./dist/zn-nft-sets.nft" "${nftd_path}/"
   create_if_not_exist "${nftd_path}/custom-define.nft"
-  cp_if_not_exists "${nftd_path}/custom-input.nft" "./dist/custom-input.nft"
+  cp_if_not_exists "./dist/custom-input.nft" "${nftd_path}/custom-input.nft"
   create_if_not_exist "${nftd_path}/custom-sets.nft"
 }
 
