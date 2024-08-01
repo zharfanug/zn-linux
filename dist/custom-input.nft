@@ -1,0 +1,3 @@
+chain custom_input {
+  # tcp dport 80 accept # sample allow port 80
+}
