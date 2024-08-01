@@ -118,6 +118,7 @@ install_script zn-init.sh
 
 if [ -e zn-config ]; then
   install_script_config zn-config
+  ./zn-config
 fi
 
 if command -v nft >/dev/null 2>&1; then
