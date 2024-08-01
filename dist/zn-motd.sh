@@ -1,5 +1,5 @@
 #!/bin/bash
-export motd_ver=2.0.14
+export motd_ver=2.0.15
 
 if [ -f /etc/lsb-release ]; then
   osver=$(cat /etc/lsb-release | grep "DISTRIB_RELEASE" | cut -d "=" -f 2- | sed 's/"//g')
@@ -36,9 +36,39 @@ Y="\e[1;33m"
 dim="\e[2m"
 undim="\e[0m"
 
+print_usage() {
+  usage_used=$2
+  usage_used_h=$3
+  usage_total=$4
+  usage_total_h=$5
+  usage_used_ratio=$(( usage_used * 10000 / usage_total ))
+  if (( usage_used_ratio < 10 )); then
+    usage_used_ratio="0$usage_used_ratio"
+  fi
+  usage_used_percent="${usage_used_ratio%??}.${usage_used_ratio: -2}"
+  if (( usage_used_ratio < 100 )); then
+    usage_used_percent="0$usage_used_percent"
+  fi
+  if (( usage_used_ratio <= (warn_usage * 100) )); then
+    usage_color=$G
+  elif (( usage_used_ratio <= (max_usage * 100) )); then
+    usage_color=$Y
+  else
+    usage_color=$R
+  fi
+  
+  if [[ "${1}" == "Memory" ]]; then
+    printf "${W}  %-*s: ${usage_color}${usage_used_percent}%%${W} (${usage_color}${usage_used_h}${W} / ${usage_total_h})\n" "$cs" "${1}"
+  elif [[ "${1}" == "DiskRoot" ]]; then
+    printf "${W}  %-*s: ${usage_color}${usage_used_percent}%%${W} (${usage_color}${usage_used_h}${W} / ${usage_total_h}) (/)\n" "$cs" "Disk"
+  elif [[ "${1}" == "DiskOther" ]]; then
+    padding=$(printf "%*s" $(($cs + 3)) "") # +2 for ": "
+    printf "${W}%s ${usage_color}${usage_used_percent}%%${W} (${usage_color}${usage_used_h}${W} / ${usage_total_h}) (${6})\n" "$padding"
+  fi
+}
+
 print_motd() {
   services=($(systemctl list-unit-files --type=service --no-pager | grep -vE "(@)" | grep -vE "^(${services_pattern})" | awk '/\.service/ {print substr($1, 1, length($1)-8)}'))
-  # services+=("sysstat")
 
   # get processors
   PROCESSOR_COUNT=`grep -ioP 'processor\t:' /proc/cpuinfo | wc -l`
@@ -92,63 +122,38 @@ print_motd() {
   # Fetch Memory Usage
   memory_info=$(free -b | grep Mem)
   memory_info_h=$(free -h | grep Mem)
-  memory_total=$(echo "$memory_info" | awk '{print $2}')
-  memory_total_h=$(echo "$memory_info_h" | awk '{print $2}')
   memory_used=$(echo "$memory_info" | awk '{print $3}')
   memory_used_h=$(echo "$memory_info_h" | awk '{print $3}')
-  memory_used_ratio=$(( memory_used * 10000 / memory_total ))
-  if (( memory_used_ratio < 10 )); then
-    memory_used_ratio="0$memory_used_ratio"
+  memory_total=$(echo "$memory_info" | awk '{print $2}')
+  memory_total_h=$(echo "$memory_info_h" | awk '{print $2}')
+  print_usage "Memory" $memory_used $memory_used_h $memory_total $memory_total_h
+
+  # Fetch Disk Usage
+  disk_root_info=$(df / | awk 'NR==2 {print $3, $2, $5}')
+  disk_root_info_h=$(df / -h | awk 'NR==2 {print $3, $2, $5}')
+  disk_root_used=$(echo "$disk_root_info" | awk '{print $1}')
+  disk_root_used_h=$(echo "$disk_root_info_h" | awk '{print $1}')
+  disk_root_total=$(echo "$disk_root_info" | awk '{print $2}')
+  disk_root_total_h=$(echo "$disk_root_info_h" | awk '{print $2}')
+  print_usage "DiskRoot" $disk_root_used $disk_root_used_h $disk_root_total $disk_root_total_h
+
+  disks=$(df --output=target -x tmpfs -x devtmpfs | tail -n +2 | grep -vE '^(/boot|/snap)' | grep -vE '^(/)$')
+  if [[ -n "${disks}" ]]; then
+    while read -r line; do
+      disk_info=$(df $line | awk 'NR==2 {print $3, $2, $5}')
+      disk_info_h=$(df $line -h | awk 'NR==2 {print $3, $2, $5}')
+      disk_used=$(echo "$disk_info" | awk '{print $1}')
+      disk_used_h=$(echo "$disk_info_h" | awk '{print $1}')
+      disk_total=$(echo "$disk_info" | awk '{print $2}')
+      disk_total_h=$(echo "$disk_info_h" | awk '{print $2}')
+      if [[ "$disk_used" != "$disk_root_used" ]]; then
+        if [[ "$disk_total" != "$disk_root_total" ]]; then
+          print_usage "DiskOther" $disk_used $disk_used_h $disk_total $disk_total_h $line
+        fi
+      fi
+    done <<< "$disks"
   fi
-  memory_used_percent="${memory_used_ratio%??}.${memory_used_ratio: -2}"
-  if (( memory_used_ratio < 100 )); then
-    memory_used_percent="0$memory_used_percent"
-  fi
-  if (( memory_used_ratio <= (warn_usage * 100) )); then
-    memory_color=$G
-  elif (( memory_used_ratio <= (max_usage * 100) )); then
-    memory_color=$Y
-  else
-    memory_color=$R
-  fi
-  printf "${W}  %-*s: ${memory_color}%s${W}%s${memory_color}%s${W}%s\n" "$cs" "Memory" "${memory_used_percent}%" " (" "${memory_used_h}" " / ${memory_total_h})"
-
-  disks=$(df --output=target -x tmpfs -x devtmpfs | tail -n +2 | grep -vE '^(/boot|/snap)')
-
-  first=true
-  while read -r line; do
-    disk_info=$(df $line | awk 'NR==2 {print $3, $2, $5}')
-    disk_info_h=$(df $line -h | awk 'NR==2 {print $3, $2, $5}')
-
-    disk_used_h=$(echo "$disk_info_h" | awk '{print $1}')
-    disk_total_h=$(echo "$disk_info_h" | awk '{print $2}')
-    disk_used=$(echo "$disk_info" | awk '{print $1}')
-    disk_total=$(echo "$disk_info" | awk '{print $2}')
-    disk_used_ratio=$(( disk_used * 10000 / disk_total ))
-    if (( disk_used_ratio < 10 )); then
-      disk_used_ratio="0$disk_used_ratio"
-    fi
-    disk_used_percent="${disk_used_ratio%??}.${disk_used_ratio: -2}"
-    if (( disk_used_ratio < 100 )); then
-      disk_used_percent="0$disk_used_percent"
-    fi
-    if (( disk_used_ratio <= (warn_usage * 100) )); then
-      disk_color=$G
-    elif (( disk_used_ratio <= (max_usage * 100) )); then
-      disk_color=$Y
-    else
-      disk_color=$R
-    fi
-
-    if $first; then
-      printf "${W}  %-*s: ${disk_color}%s${W}%s${disk_color}%s${W}%s\n" "$cs" "Disk" "${disk_used_percent}%" " (" "${disk_used_h}" " / ${disk_total_h}) ($line)"
-      first=false
-    else
-      padding=$(printf "%*s" $(($cs + 3)) "") # +2 for ": "
-      printf "${W}%s ${disk_color}%s${W}%s${disk_color}%s${W}%s\n" "$padding" "${disk_used_percent}%" " (" "${disk_used_h}" " / ${disk_total_h}) ($line)"
-    fi
-  done <<< "$disks"
-
+  
   # set column width
   COLUMNS=3
   # sort services
