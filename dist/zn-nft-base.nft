@@ -1,0 +1,45 @@
+#!/usr/sbin/nft -f
+#zn-nft-base v2.0.2
+
+# Flush the current ruleset
+flush ruleset
+
+include "/etc/nftables.d/custom-define.nft"
+
+include "/etc/nftables.d/zn-nft-define.nft"
+
+table inet filter {
+  include "/etc/nftables.d/custom-sets.nft"
+
+  include "/etc/nftables.d/zn-nft-sets.nft"
+
+  include "/etc/nftables.d/custom-input.nft"
+
+  include "/etc/nftables.d/zn-nft-input.nft"
+
+  # Inbound traffic policy
+  chain input {
+    # Drop all incoming traffic by default
+    type filter hook input priority 0; policy drop;
+
+    jump custom_input
+
+    jump standard_input
+
+    # Allow incoming traffic related to established connections
+    ct state {established, related} accept
+    ct state invalid drop
+  }
+
+  # Outbound traffic policy
+  chain output {
+    # Allow all outgoing traffic
+    type filter hook output priority 0; policy accept;
+  }
+
+  # Forward traffic policy
+  chain forward {
+    # Drop all forwarding traffic by default
+    type filter hook forward priority 0; policy drop;
+  }
+}

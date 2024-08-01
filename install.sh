@@ -62,10 +62,11 @@ install_script() {
   sudo rm -f /etc/profile.d/$1 2>/dev/null
   sudo cp ./dist/$1 /etc/profile.d/
 }
-install_script_local() {
+install_script_config() {
   sudo chmod 755 $1
   sudo rm -f /etc/profile.d/$1 2>/dev/null
-  sudo cp $1 /etc/profile.d/
+  sudo rm -f /etc/profile.d/${1}.sh 2>/dev/null
+  sudo cp $1 /etc/profile.d/${1}.sh
 }
 link_to_bin() {
   sudo rm -f /usr/local/bin/$2 2>/dev/null
@@ -75,6 +76,23 @@ add_to_bin() {
   sudo chmod 755 ./dist/$1
   sudo rm -f /usr/local/bin/$1 2>/dev/null
   sudo cp ./dist/$1 /usr/local/bin/$1
+}
+
+copy_nft() {
+  sudo cp "./dist/zn-nft-base.nft" "/etc/nftables.conf"
+  nftd_path="/etc/nftables.d"
+  mkdir -p nftd_path
+  sudo cp "./dist/zn-nft-define.nft" "/etc/nftables.conf"
+  sudo cp "./dist/zn-nft-define.nft" "${nftd_path}/"
+  sudo cp "./dist/zn-nft-input.nft" "${nftd_path}/"
+  sudo cp "./dist/zn-nft-sets.nft" "${nftd_path}/"
+}
+
+initial_nftables() {
+  mkdir -p ~/.backup
+  timestamp=$(date +'%Y%m%d_%H%M')
+  sudo cp "/etc/nftables.conf" "${HOME}/.backup/nftables_${timestamp}.conf"
+  copy_nft
 }
 install_if_not_exist sysstat
 run_if_not_active sysstat
@@ -86,5 +104,9 @@ add_to_bin zn-linux
 install_script zn-init.sh
 
 if [ -e zn-config ]; then
-  install_script_local zn-config
+  install_script_config zn-config
+fi
+
+if command -v nft >/dev/null 2>&1; then
+  initial_nftables
 fi

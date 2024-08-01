@@ -1,6 +1,13 @@
 #!/bin/bash
-export zn_ver=1.0.1
+export zn_ver=1.0.2
 
-echo "zn: $zn_ver"
-echo "motd: $motd_ver"
-echo "init: $init_ver"
+echo "zn-linux v$zn_ver"
+echo "zn-init v$init_ver"
+motd -v
+# echo "nft: "
+
+if command -v nft >/dev/null 2>&1; then
+  if systemctl is-active --quiet "nftables"; then
+    echo nftables active
+  fi
+fi

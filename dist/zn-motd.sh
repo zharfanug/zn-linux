@@ -1,9 +1,5 @@
 #!/bin/bash
-export motd_ver=2.0.13
-
-if [ -e zn-config ]; then
-  source zn-config
-fi
+export motd_ver=2.0.14
 
 if [ -f /etc/lsb-release ]; then
   osver=$(cat /etc/lsb-release | grep "DISTRIB_RELEASE" | cut -d "=" -f 2- | sed 's/"//g')
