@@ -1,5 +1,5 @@
 #!/bin/bash
-export motd_ver=2.0.15
+export motd_ver=2.0.16
 
 if [ -f /etc/lsb-release ]; then
   osver=$(cat /etc/lsb-release | grep "DISTRIB_RELEASE" | cut -d "=" -f 2- | sed 's/"//g')
@@ -94,7 +94,10 @@ print_motd() {
     fi
   done <<< "$ips"
 
-  ip_v4=$(curl -s ifconfig.me/ip)
+  ip_v4=$(curl -s --max-time 5 ifconfig.me/ip)
+  if [ -z "$ip_v4" ]; then
+    ip_v4="Unavailable"
+  fi
   printf "${W}  %-*s: %s\n" "$cs" "Public IP" "$ip_v4"
 
   echo -e "\n${W}Resources Usage:"
