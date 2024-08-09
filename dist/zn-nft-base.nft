@@ -2,14 +2,14 @@
 #zn-nft-base v2.0.4
 
 # Flush the current ruleset
-table inet filter
-flush table inet filter
+table inet zn-nft
+flush table inet zn-nft
 
 include "/etc/nftables.d/custom-define.nft"
 include "/etc/nftables.d/zn-nft-define.nft"
 
 
-table inet filter {
+table inet zn-nft {
   include "/etc/nftables.d/custom-sets.nft"
 
   include "/etc/nftables.d/custom-input.nft"
