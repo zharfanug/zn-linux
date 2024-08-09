@@ -1,5 +1,5 @@
 #!/usr/sbin/nft -f
-#zn-nft-base v2.0.3
+#zn-nft-base v2.0.4
 
 # Flush the current ruleset
 flush ruleset
@@ -29,17 +29,5 @@ table inet filter {
     # Allow incoming traffic related to established connections
     ct state {established, related} accept
     ct state invalid drop
-  }
-
-  # Outbound traffic policy
-  chain output {
-    # Allow all outgoing traffic
-    type filter hook output priority 0; policy accept;
-  }
-
-  # Forward traffic policy
-  chain forward {
-    # Drop all forwarding traffic by default
-    type filter hook forward priority 0; policy drop;
   }
 }
