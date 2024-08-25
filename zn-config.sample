@@ -1,0 +1,5 @@
+#!/bin/bash
+# split by ,
+# export excluded_services="snapd,apparmor" # sample remove snapd and apparmor
+export excluded_services=""
+export included_services=""

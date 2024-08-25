@@ -1,0 +1,5 @@
+chain custom_input {
+  # sample config:
+  # tcp dport 80 accept # sample allow port 80
+  # ip saddr @net_locals tcp dport 80 accept # sample allow port 80 for lan only
+}

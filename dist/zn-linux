@@ -1,0 +1,51 @@
+#!/bin/bash
+export zn_ver=1.2.3
+
+check_nftd_ver() {
+  nftd_path="/etc/nftables.d"
+  if [ -e "${nftd_path}/${1}.nft" ]; then
+    zn_nftd_ver=$(grep -oP "#${1} v\K[\d.]+" "${nftd_path}/${1}.nft")
+    echo "${1} v$zn_nftd_ver"
+  fi
+}
+
+print_ver() {
+  echo "zn-linux v$zn_ver"
+  if [[ -n "${init_ver}" ]]; then
+    echo "zn-init v$init_ver"
+  else
+    zn_init_ver=$(grep -oP 'export init_ver=\K[\d.]+' /etc/profile.d/zn-init.sh)
+    echo "zn-init v$zn_init_ver"
+  fi
+  motd -v
+
+  if command -v nft >/dev/null 2>&1; then
+    if systemctl is-active --quiet "nftables"; then
+      if [ -e "/etc/nftables.conf" ]; then
+        zn_nft_ver=$(grep -oP '#zn-nft-base v\K[\d.]+' /etc/nftables.conf)
+        echo "zn_nft v$zn_nft_ver"
+        
+        check_nftd_ver "zn-nft-define"
+        check_nftd_ver "zn-nft-input"
+        check_nftd_ver "zn-nft-sets"
+      fi
+    fi
+  fi
+}
+
+
+if [[ "$1" == "--update" || "$1" == "-U" ]]; then
+  # Get the current working directory and store it in a variable
+  old_pwd=$(pwd)
+
+  # Change to the new directory
+  cd /opt/zn-linux || { echo "Directory /opt/zn-linux does not exist."; exit 1; }
+
+  # Perform your tasks in /opt/zn-linux...
+  git reset --hard main && git pull --rebase origin main && source install.sh
+
+  # Change back to the original directory
+  cd "$old_pwd" || { echo "Failed to return to $old_pwd."; exit 1; }
+else
+  print_ver
+fi

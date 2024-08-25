@@ -1,0 +1,37 @@
+#!/usr/sbin/nft -f
+#zn-nft-base v1.2.5
+# THIS FILE IS MANAGED BY ZN-LINUX
+# DO NOT DIRECTLY EDIT THIS FILE AS IT WILL BE REPLACED UPON UPDATE!
+# EDIT /etc/nftables.d/custom-* INSTEAD.
+
+# Flush the current ruleset
+table inet zn-nft
+flush table inet zn-nft
+
+include "/etc/nftables.d/custom-define.nft"
+include "/etc/nftables.d/zn-nft-define.nft"
+
+
+table inet zn-nft {
+  include "/etc/nftables.d/custom-sets.nft"
+
+  include "/etc/nftables.d/custom-input.nft"
+
+  include "/etc/nftables.d/zn-nft-sets.nft"
+
+  include "/etc/nftables.d/zn-nft-input.nft"
+
+  # Inbound traffic policy
+  chain input {
+    # Drop all incoming traffic by default
+    type filter hook input priority 0; policy drop;
+
+    jump custom_input
+
+    jump standard_input
+
+    # Allow incoming traffic related to established connections
+    ct state {established, related} accept
+    ct state invalid drop
+  }
+}

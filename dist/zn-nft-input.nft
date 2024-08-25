@@ -1,0 +1,12 @@
+#zn-nft-input v1.2.1
+
+chain standard_input {
+  # Allow SSH traffic from locals
+  ip saddr @net_locals tcp dport 10022 accept
+
+  # Allow incoming ICMP traffic (including ping)
+  ip protocol icmp accept
+
+  # Allow localhost to access local
+  ip saddr 127.0.0.1 accept
+}
